@@ -1,0 +1,10 @@
+{% set current_status = current_status if current_status is defined else (state.status if state else 'new') %}
+<form id="job-status" class="status-form" method="post" action="/jobs/{{ job_id if job_id is defined else job.id }}/status" hx-post="/jobs/{{ job_id if job_id is defined else job.id }}/status" hx-target="#job-status" hx-swap="outerHTML">
+  <input type="hidden" name="profile" value="{{ selected_profile.id }}">
+  <label>Status
+    <select name="status">
+      {% for option in statuses %}<option value="{{ option.value }}" {% if option.value == current_status %}selected{% endif %}>{{ option.value }}</option>{% endfor %}
+    </select>
+  </label>
+  <button type="submit">Save status</button>
+</form>

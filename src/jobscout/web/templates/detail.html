@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ row[0].title }} · JobScout{% endblock %}
+{% block content %}
+  {% set job, match, state = row %}
+  <p><a href="/?profile={{ selected_profile.id }}">← Back to jobs</a></p>
+  <article class="detail panel">
+    <div class="detail-heading"><div><h1>{{ job.title }}</h1><p>{{ job.company }} · {{ job.locations|join(', ') or 'Location unknown' }}</p></div><div class="score large">{{ match.score }}</div></div>
+    <div class="badges"><span>{{ job.provider }}</span><span>{{ job.workplace_type }}</span><span>{{ job.language }}</span><span>{{ job.seniority }}</span></div>
+    {% include "_status_form.html" with context %}
+    <h2>Why this score?</h2>
+    <ul>{% for reason in match.reasons %}<li>{{ reason }}</li>{% else %}<li>No positive match reasons.</li>{% endfor %}</ul>
+    {% if match.exclusion_reasons %}<h2>Exclusions</h2><ul>{% for reason in match.exclusion_reasons %}<li>{{ reason }}</li>{% endfor %}</ul>{% endif %}
+    <p><a class="button" href="{{ job.job_url }}" target="_blank" rel="noopener noreferrer">Open original posting</a></p>
+    <h2>Description</h2>
+    <div class="description">{{ job.description|safe_description_html|safe }}</div>
+  </article>
+{% endblock %}

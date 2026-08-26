@@ -1,0 +1,13 @@
+[
+  {
+    "id": "lever-201",
+    "text": "Backend Engineer",
+    "categories": {"location": "Munich, Germany", "allLocations": ["Munich, Germany"]},
+    "country": "DE",
+    "descriptionPlain": "We are looking for a Python engineer with experience in APIs and databases.",
+    "hostedUrl": "https://jobs.eu.lever.co/example/lever-201",
+    "applyUrl": "https://jobs.eu.lever.co/example/lever-201/apply",
+    "workplaceType": "hybrid",
+    "createdAt": 1785585600000
+  }
+]

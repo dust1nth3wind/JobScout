@@ -1,0 +1,12 @@
+{
+  "jobs": [
+    {
+      "id": 101,
+      "title": "Senior Python Engineer",
+      "absolute_url": "https://boards.greenhouse.io/example/jobs/101?gh_jid=101",
+      "content": "<p>We are looking for an engineer with Python experience and strong communication skills.</p>",
+      "location": {"name": "Berlin, Germany"},
+      "updated_at": "2026-08-01T12:00:00Z"
+    }
+  ]
+}
