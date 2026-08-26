@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Jobs · JobScout{% endblock %}
+{% block content %}
+  <section class="panel">
+    <form method="get" class="filters">
+      <label>Profile
+        <select name="profile">
+          {% for profile in profiles %}<option value="{{ profile.id }}" {% if profile.id == selected_profile.id %}selected{% endif %}>{{ profile.display_name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Status
+        <select name="status">
+          <option value="">All</option>
+          {% for status in statuses %}<option value="{{ status.value }}" {% if status.value == selected_status %}selected{% endif %}>{{ status.value }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Source
+        <select name="source">
+          <option value="">All</option>
+          {% for source in sources %}<option value="{{ source.id }}" {% if source.id == selected_source %}selected{% endif %}>{{ source.company }} · {{ source.provider.value }}</option>{% endfor %}
+        </select>
+      </label>
+      <button type="submit">Filter</button>
+    </form>
+  </section>
+
+  <p class="muted">{{ rows|length }} active jobs for {{ selected_profile.display_name }}</p>
+  <section class="jobs">
+    {% for job, match, state in rows %}
+      <article class="job {% if match.excluded %}excluded{% endif %}">
+        <div class="score">{{ match.score }}</div>
+        <div>
+          <a class="job-title" href="/jobs/{{ job.id }}?profile={{ selected_profile.id }}">{{ job.title }}</a>
+          <p>{{ job.company }} · {{ job.locations|join(', ') or 'Location unknown' }}</p>
+          <div class="badges">
+            <span>{{ state.status if state else 'new' }}</span><span>{{ job.workplace_type }}</span><span>{{ job.language }}</span>
+            {% if match.excluded %}<span class="warning">excluded</span>{% elif match.meets_threshold %}<span class="positive">match</span>{% endif %}
+          </div>
+        </div>
+      </article>
+    {% else %}
+      <div class="empty">No jobs yet. Run <code>uv run jobscout scan</code> first.</div>
+    {% endfor %}
+  </section>
+{% endblock %}
