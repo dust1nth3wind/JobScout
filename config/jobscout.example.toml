@@ -1,0 +1,72 @@
+[app]
+database_path = "../data/jobscout.sqlite3"
+request_timeout_seconds = 20
+retry_attempts = 2
+
+[[sources]]
+id = "example-greenhouse"
+company = "Example Greenhouse Company"
+provider = "greenhouse"
+board_token = "replace-me"
+enabled = false
+
+[[sources]]
+id = "example-lever-eu"
+company = "Example Lever Company"
+provider = "lever"
+site = "replace-me"
+instance = "eu"
+enabled = false
+
+[[sources]]
+id = "example-ashby"
+company = "Example Ashby Company"
+provider = "ashby"
+board_name = "replace-me"
+include_compensation = true
+enabled = false
+
+[[sources]]
+id = "example-website"
+company = "Example Company Website"
+provider = "website"
+job_urls = ["https://example.com/jobs/example-role"]
+default_locations = ["Berlin, Deutschland"]
+default_countries = ["DE"]
+enabled = false
+
+[[profiles]]
+id = "friend-a"
+display_name = "Friend A"
+required_languages = ["en"]
+preferred_languages = []
+allowed_regions = ["europe"]
+allowed_countries = []
+remote_preference = "prefer"
+required_skills = []
+preferred_skills = ["replace-with-a-real-skill"]
+excluded_terms = []
+excluded_location_terms = []
+required_title_terms = []
+preferred_terms = []
+allowed_seniorities = []
+excluded_seniorities = []
+minimum_score = 40
+
+[[profiles]]
+id = "friend-b"
+display_name = "Friend B"
+required_languages = []
+preferred_languages = ["de"]
+allowed_regions = ["dach"]
+allowed_countries = []
+remote_preference = "prefer"
+required_skills = []
+preferred_skills = ["replace-with-a-real-skill"]
+excluded_terms = []
+excluded_location_terms = []
+required_title_terms = []
+preferred_terms = []
+allowed_seniorities = []
+excluded_seniorities = []
+minimum_score = 40
