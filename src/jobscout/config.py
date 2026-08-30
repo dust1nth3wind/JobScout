@@ -86,9 +86,10 @@ SourceConfig = Annotated[
 class MatchingWeights(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    skills: int = Field(default=40, ge=0)
+    skills: int = Field(default=30, ge=0)
+    industry: int = Field(default=15, ge=0)
     title: int = Field(default=20, ge=0)
-    seniority: int = Field(default=15, ge=0)
+    seniority: int = Field(default=10, ge=0)
     location: int = Field(default=15, ge=0)
     language: int = Field(default=10, ge=0)
 
@@ -105,6 +106,8 @@ class ProfileConfig(BaseModel):
     remote_preference: Literal["any", "prefer", "require", "exclude"] = "any"
     required_skills: list[str] = Field(default_factory=list)
     preferred_skills: list[str] = Field(default_factory=list)
+    preferred_skill_groups: list[list[str]] = Field(default_factory=list)
+    preferred_industry_groups: list[list[str]] = Field(default_factory=list)
     excluded_terms: list[str] = Field(default_factory=list)
     excluded_location_terms: list[str] = Field(default_factory=list)
     required_title_terms: list[str] = Field(default_factory=list)
@@ -129,6 +132,18 @@ class ProfileConfig(BaseModel):
         ):
             values = getattr(self, field_name)
             setattr(self, field_name, list(dict.fromkeys(value.strip().lower() for value in values if value.strip())))
+        for field_name in ("preferred_skill_groups", "preferred_industry_groups"):
+            normalized_groups: list[list[str]] = []
+            seen_groups: set[tuple[str, ...]] = set()
+            for group in getattr(self, field_name):
+                normalized = list(
+                    dict.fromkeys(value.strip().lower() for value in group if value.strip())
+                )
+                signature = tuple(normalized)
+                if signature and signature not in seen_groups:
+                    normalized_groups.append(normalized)
+                    seen_groups.add(signature)
+            setattr(self, field_name, normalized_groups)
         return self
 
     def fingerprint(self) -> str:

@@ -31,6 +31,25 @@ def _allowed_countries(profile: ProfileConfig) -> set[str]:
     return allowed
 
 
+def _unique_groups(groups: list[list[str]]) -> list[list[str]]:
+    unique: list[list[str]] = []
+    seen: set[tuple[str, ...]] = set()
+    for group in groups:
+        signature = tuple(group)
+        if signature and signature not in seen:
+            unique.append(group)
+            seen.add(signature)
+    return unique
+
+
+def _matched_groups(haystack: str, groups: list[list[str]]) -> list[list[str]]:
+    return [group for group in groups if any(_contains(haystack, term) for term in group)]
+
+
+def _group_labels(groups: list[list[str]]) -> str:
+    return ", ".join(" / ".join(group) for group in groups)
+
+
 class Matcher:
     def evaluate(self, job: CollectedJob, profile: ProfileConfig) -> MatchResult:
         haystack = normalized_text(f"{job.title} {job.description} {' '.join(job.skills)}")
@@ -82,13 +101,23 @@ class Matcher:
         available = 0.0
         weights = profile.weights
 
-        skills = list(dict.fromkeys(profile.required_skills + profile.preferred_skills))
-        if skills:
+        skill_groups = _unique_groups(
+            [[skill] for skill in profile.required_skills + profile.preferred_skills]
+            + profile.preferred_skill_groups
+        )
+        if skill_groups:
             available += weights.skills
-            matches = [skill for skill in skills if _contains(haystack, skill)]
-            earned += weights.skills * len(matches) / len(skills)
+            matches = _matched_groups(haystack, skill_groups)
+            earned += weights.skills * len(matches) / len(skill_groups)
             if matches:
-                reasons.append(f"skills matched: {', '.join(matches)}")
+                reasons.append(f"skills matched: {_group_labels(matches)}")
+
+        if profile.preferred_industry_groups:
+            available += weights.industry
+            industry_matches = _matched_groups(haystack, profile.preferred_industry_groups)
+            if industry_matches:
+                earned += weights.industry
+                reasons.append(f"preferred industries matched: {_group_labels(industry_matches)}")
 
         if profile.preferred_terms:
             available += weights.title
@@ -105,8 +134,8 @@ class Matcher:
                 earned += weights.seniority
                 reasons.append(f"seniority matched: {job.seniority}")
             elif job.seniority == "unknown":
-                earned += weights.seniority * 0.25
-                reasons.append("seniority unknown")
+                earned += weights.seniority * 0.5
+                reasons.append("seniority unknown (neutral score)")
 
         if allowed_countries or profile.remote_preference != "any":
             available += weights.location

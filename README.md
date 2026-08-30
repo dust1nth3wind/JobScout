@@ -31,6 +31,8 @@ Copy-Item config/jobscout.example.toml config/jobscout.toml
 
 Edit `config/jobscout.toml`, enable sources, and replace their board identifiers. Database paths are resolved relative to the configuration file.
 
+Use `preferred_skill_groups` for technologies whose entries are alternatives or synonyms, such as `[["nx", "siemens nx"], ["fem", "fea"]]`. Use `preferred_industry_groups` for preferred industries. Matching any term in one technology group counts that group once; matching any preferred industry earns the full industry score.
+
 Validate the configuration:
 
 ```text

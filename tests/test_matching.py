@@ -134,3 +134,69 @@ def test_required_title_terms_are_alternative_hard_filters() -> None:
     assert matching.excluded is False
     assert unrelated.excluded is True
     assert "title does not match the required role family" in unrelated.exclusion_reasons
+
+
+def test_skill_synonyms_count_as_one_alternative_group() -> None:
+    grouped_profile = profile(
+        required_languages=[],
+        allowed_regions=[],
+        remote_preference="any",
+        required_skills=[],
+        preferred_skills=[],
+        preferred_skill_groups=[["nx", "siemens nx"], ["cfd"]],
+        preferred_terms=[],
+        allowed_seniorities=[],
+    )
+
+    one_synonym = Matcher().evaluate(
+        job(description="Mechanical design with Siemens NX.", language="unknown"),
+        grouped_profile,
+    )
+    repeated_synonyms = Matcher().evaluate(
+        job(description="Mechanical design with NX and Siemens NX.", language="unknown"),
+        grouped_profile,
+    )
+
+    assert one_synonym.score == 50
+    assert repeated_synonyms.score == 50
+
+
+def test_one_matching_preferred_industry_earns_full_industry_score() -> None:
+    industry_profile = profile(
+        required_languages=[],
+        allowed_regions=[],
+        remote_preference="any",
+        required_skills=[],
+        preferred_skills=[],
+        preferred_terms=[],
+        allowed_seniorities=[],
+        preferred_industry_groups=[
+            ["luft- und raumfahrttechnik", "aerospace"],
+            ["automobilindustrie", "automotive"],
+        ],
+    )
+
+    result = Matcher().evaluate(
+        job(description="We develop aerospace structures.", language="unknown"),
+        industry_profile,
+    )
+
+    assert result.score == 100
+    assert "preferred industries matched" in result.reasons[0]
+
+
+def test_unknown_seniority_receives_neutral_half_credit() -> None:
+    seniority_profile = profile(
+        required_languages=[],
+        allowed_regions=[],
+        remote_preference="any",
+        required_skills=[],
+        preferred_skills=[],
+        preferred_terms=[],
+        allowed_seniorities=["junior"],
+    )
+
+    result = Matcher().evaluate(job(seniority="unknown", language="unknown"), seniority_profile)
+
+    assert result.score == 50
+    assert "seniority unknown (neutral score)" in result.reasons
