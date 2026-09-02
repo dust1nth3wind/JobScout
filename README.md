@@ -1,21 +1,45 @@
 # JobScout
 
-JobScout is a small local application that collects public job postings from configured Greenhouse, Lever and Ashby boards or explicitly seeded public job pages, normalizes them, and ranks them against TOML-based user profiles. Ranking is deterministic and works without an LLM.
+JobScout sammelt öffentliche Stellenanzeigen von Greenhouse, Lever und Ashby sowie von direkt eingetragenen Jobseiten. Anschließend vereinheitlicht die Anwendung die Anzeigen und bewertet sie anhand der Profile in der Konfigurationsdatei. Die Bewertung ist regelbasiert und funktioniert ohne LLM.
 
-## Requirements
+## Für Harish und Xining: Nach einem Update
 
-- macOS or Windows
+Öffnet ein Terminal im Ordner `JobScout` und führt diese Befehle der Reihe nach aus:
+
+```text
+git pull
+uv sync
+uv run jobscout config check
+uv run jobscout serve
+```
+
+Danach ist das Dashboard unter [http://127.0.0.1:8000](http://127.0.0.1:8000) erreichbar.
+
+Mit `Ctrl+C` beendet ihr den laufenden Server. Wenn ihr nur neue Stellenanzeigen abrufen möchtet, verwendet statt `serve` diesen Befehl:
+
+```text
+uv run jobscout scan
+```
+
+Wichtig: Kopiert bei einem Update nicht erneut `config/jobscout.example.toml`. Eure persönlichen Einstellungen stehen bereits in `config/jobscout.toml` und bleiben bei `git pull` erhalten. Falls `config check` einen Fehler meldet, vergleicht eure Datei mit `config/jobscout.example.toml` und ergänzt neue Einstellungen.
+
+## Voraussetzungen
+
+- macOS oder Windows
 - [uv](https://docs.astral.sh/uv/)
+- Git, wenn Updates mit `git pull` geladen werden
 
-The project pins Python 3.13 in `.python-version`; `uv` can install and manage it independently of the system Python.
+Das Projekt verwendet Python 3.13. Die Version ist in `.python-version` festgelegt und wird von `uv` unabhängig von der systemweit installierten Python-Version verwaltet.
 
-## Setup
+## Ersteinrichtung
+
+Installiert zuerst die benötigten Pakete:
 
 ```text
 uv sync
 ```
 
-Copy the example configuration without committing the local copy:
+Erstellt danach eure persönliche Konfigurationsdatei. Sie wird nicht in Git gespeichert.
 
 macOS:
 
@@ -29,50 +53,50 @@ Windows PowerShell:
 Copy-Item config/jobscout.example.toml config/jobscout.toml
 ```
 
-Edit `config/jobscout.toml`, enable sources, and replace their board identifiers. Database paths are resolved relative to the configuration file.
+Öffnet `config/jobscout.toml`, aktiviert die gewünschten Quellen und tragt die jeweiligen Board-IDs ein. Datenbankpfade werden relativ zur Konfigurationsdatei aufgelöst.
 
-Use `preferred_skill_groups` for technologies whose entries are alternatives or synonyms, such as `[["nx", "siemens nx"], ["fem", "fea"]]`. Use `preferred_industry_groups` for preferred industries. Matching any term in one technology group counts that group once; matching any preferred industry earns the full industry score.
+Mit `preferred_skill_groups` lassen sich alternative Bezeichnungen für dieselbe Technologie zusammenfassen, zum Beispiel `[["nx", "siemens nx"], ["fem", "fea"]]`. Bevorzugte Branchen werden in `preferred_industry_groups` eingetragen. Pro Technologiegruppe wird höchstens ein Treffer gezählt; eine passende bevorzugte Branche erhält die volle Branchenpunktzahl.
 
-Validate the configuration:
+Prüft zum Schluss die Konfiguration:
 
 ```text
 uv run jobscout config check
 ```
 
-## Usage
+## Verwendung
 
-Collect and rank all enabled sources:
+Alle aktivierten Quellen abrufen und die Ergebnisse bewerten:
 
 ```text
 uv run jobscout scan
 ```
 
-Restrict a scan if needed:
+Den Abruf auf ein Profil und eine Quelle beschränken:
 
 ```text
 uv run jobscout scan --profile friend-a --source example-greenhouse
 ```
 
-Start the local dashboard:
+Das lokale Dashboard starten:
 
 ```text
 uv run jobscout serve
 ```
 
-Open `http://127.0.0.1:8000`. The server intentionally binds to localhost by default and has no authentication.
+Das Dashboard läuft unter [http://127.0.0.1:8000](http://127.0.0.1:8000). Der Server ist standardmäßig nur auf dem eigenen Computer erreichbar und besitzt keine Anmeldung.
 
-Configuration precedence is `--config`, then `JOBSCOUT_CONFIG`, then `config/jobscout.toml`. Use absolute paths when running through an operating-system scheduler.
+Für die Konfigurationsdatei gilt diese Reihenfolge: `--config`, danach `JOBSCOUT_CONFIG`, danach `config/jobscout.toml`. Bei einer Ausführung über die Aufgabenplanung des Betriebssystems sollten absolute Pfade verwendet werden.
 
-## Development
+## Tests
 
 ```text
 uv run pytest
 ```
 
-Default tests use recorded fixtures and `httpx.MockTransport`; they do not contact live ATS APIs.
+Die normalen Tests verwenden gespeicherte Beispieldaten und `httpx.MockTransport`. Sie greifen nicht auf die echten ATS-Schnittstellen zu.
 
-## Data and privacy
+## Daten und Datenschutz
 
-The repository is public. `config/jobscout.toml`, databases, WAL files and logs are ignored by Git. Only `config/jobscout.example.toml` is intended for version control. Back up the SQLite database before changing schema or upgrading beyond the MVP.
+Das Repository ist öffentlich. `config/jobscout.toml`, Datenbanken, WAL-Dateien und Protokolle werden von Git ignoriert. Nur `config/jobscout.example.toml` ist für die Versionsverwaltung vorgesehen. Vor Änderungen am Datenbankschema oder größeren Aktualisierungen sollte die SQLite-Datenbank gesichert werden.
 
-Scheduling examples for macOS and Windows are in [docs/scheduling.md](docs/scheduling.md).
+Beispiele für die automatische Ausführung unter macOS und Windows stehen in [docs/scheduling.md](docs/scheduling.md).
