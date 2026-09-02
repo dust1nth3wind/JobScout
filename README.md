@@ -2,7 +2,7 @@
 
 JobScout sammelt öffentliche Stellenanzeigen von Greenhouse, Lever und Ashby sowie von direkt eingetragenen Jobseiten. Anschließend vereinheitlicht die Anwendung die Anzeigen und bewertet sie anhand der Profile in der Konfigurationsdatei. Die Bewertung ist regelbasiert und funktioniert ohne LLM.
 
-## Für Harish und Xining: Nach einem Update
+## Für Harish und Xinning: Nach einem Update
 
 Öffnet ein Terminal im Ordner `JobScout` und führt diese Befehle der Reihe nach aus:
 
