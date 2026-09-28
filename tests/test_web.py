@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from jobscout.config import load_config
 from jobscout.db import (
+    JobPosting,
     create_db_engine,
     create_session_factory,
     init_db,
@@ -75,6 +76,47 @@ def test_invalid_status_returns_400(config_path: Path) -> None:
             data={"profile": "friend-a", "status": "invalid"},
         )
     assert response.status_code == 400
+
+
+def test_dashboard_hides_jobs_from_sources_assigned_to_another_profile(config_path: Path) -> None:
+    job_id = seed(config_path)
+    config_text = config_path.read_text(encoding="utf-8")
+    config_path.write_text(
+        config_text.replace('board_token = "example"', 'board_token = "example"\nprofile_ids = ["friend-b"]')
+        + '\n[[profiles]]\nid = "friend-b"\ndisplay_name = "Friend B"\n',
+        encoding="utf-8",
+    )
+
+    with TestClient(create_app(config_path)) as client:
+        index = client.get("/?profile=friend-a")
+        detail = client.get(f"/jobs/{job_id}?profile=friend-a")
+
+    assert index.status_code == 200
+    assert "Python Engineer" not in index.text
+    assert detail.status_code == 404
+
+
+def test_dashboard_hides_excluded_intern_jobs(config_path: Path) -> None:
+    job_id = seed(config_path)
+    config_path.write_text(
+        config_path.read_text(encoding="utf-8").replace(
+            "minimum_score = 40", 'minimum_score = 40\nexcluded_seniorities = ["intern"]'
+        ),
+        encoding="utf-8",
+    )
+    loaded = load_config(config_path)
+    with create_session_factory(create_db_engine(loaded.database_path))() as session:
+        job = session.get(JobPosting, job_id)
+        assert job is not None
+        job.seniority = "intern"
+        session.commit()
+
+    with TestClient(create_app(config_path)) as client:
+        index = client.get("/?profile=friend-a")
+        detail = client.get(f"/jobs/{job_id}?profile=friend-a")
+
+    assert "Python Engineer" not in index.text
+    assert detail.status_code == 404
 
 
 def test_detail_safely_formats_external_html_description(config_path: Path) -> None:

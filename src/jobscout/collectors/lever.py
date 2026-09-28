@@ -76,7 +76,17 @@ class LeverCollector:
         jobs = [_Job.model_validate(item) for item in raw]
         results: list[CollectedJob] = []
         for item, job in zip(raw, jobs, strict=True):
-            description = job.descriptionPlain or html_to_text(job.description)
+            sections = [job.descriptionPlain or html_to_text(job.description)]
+            for section in item.get("lists") or []:
+                if isinstance(section, dict):
+                    sections.extend(
+                        [
+                            str(section.get("text") or ""),
+                            html_to_text(str(section.get("content") or "")),
+                        ]
+                    )
+            sections.append(str(item.get("additionalPlain") or html_to_text(str(item.get("additional") or ""))))
+            description = " ".join(part.strip() for part in sections if part.strip())
             locations = list(dict.fromkeys(job.categories.allLocations or ([job.categories.location] if job.categories.location else [])))
             workplace = WORKPLACE_MAP.get(
                 job.workplaceType.lower(), infer_workplace(job.text, *locations, description)

@@ -9,6 +9,7 @@ from jobscout.config import load_config
 from jobscout.db import (
     JobPosting,
     JobState,
+    MatchResultRow,
     create_db_engine,
     create_session_factory,
     init_db,
@@ -115,3 +116,44 @@ def test_status_survives_rescan_and_failed_scan_does_not_deactivate(tmp_path: Pa
     with sessions() as session:
         assert session.scalar(select(JobPosting)).is_active is True
         assert session.scalar(select(JobState)).status == "interesting"
+
+
+def test_profile_scoped_sources_are_not_scanned_for_other_profiles(tmp_path: Path) -> None:
+    config_path = tmp_path / "scoped.toml"
+    config_path.write_text(
+        """
+[app]
+database_path = "scoped.sqlite3"
+[[sources]]
+id = "xinning-board"
+company = "Xinning Board"
+provider = "greenhouse"
+board_token = "xinning"
+profile_ids = ["friend-a"]
+[[sources]]
+id = "harish-board"
+company = "Harish Board"
+provider = "greenhouse"
+board_token = "harish"
+profile_ids = ["friend-b"]
+[[profiles]]
+id = "friend-a"
+display_name = "Xinning"
+[[profiles]]
+id = "friend-b"
+display_name = "Harish"
+""",
+        encoding="utf-8",
+    )
+    loaded = load_config(config_path)
+    engine = create_db_engine(loaded.database_path)
+    init_db(engine)
+    collector = MutableCollector()
+    scanner = Scanner(loaded, engine, collectors={Provider.GREENHOUSE: collector}, client=httpx.Client())
+
+    result = scanner.run(profile_id="friend-a")
+
+    assert result.sources_total == 1
+    with create_session_factory(engine)() as session:
+        assert session.scalars(select(JobPosting.source_id)).all() == ["xinning-board"]
+        assert session.scalars(select(MatchResultRow.profile_id)).all() == ["friend-a"]

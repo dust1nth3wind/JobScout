@@ -229,6 +229,8 @@ def list_jobs(
     *,
     status: str | None = None,
     source_id: str | None = None,
+    source_ids: list[str] | None = None,
+    excluded_seniorities: list[str] | None = None,
 ) -> list[tuple[JobPosting, MatchResultRow, JobState | None]]:
     statement = (
         select(JobPosting, MatchResultRow, JobState)
@@ -242,6 +244,10 @@ def list_jobs(
     )
     if source_id:
         statement = statement.where(JobPosting.source_id == source_id)
+    if source_ids is not None:
+        statement = statement.where(JobPosting.source_id.in_(source_ids))
+    if excluded_seniorities:
+        statement = statement.where(JobPosting.seniority.not_in(excluded_seniorities))
     if status == JobStatus.NEW.value:
         statement = statement.where(or_(JobState.status.is_(None), JobState.status == JobStatus.NEW.value))
     elif status:
@@ -250,7 +256,8 @@ def list_jobs(
 
 
 def get_job_with_profile(
-    session: Session, job_id: int, profile_id: str
+    session: Session, job_id: int, profile_id: str, *, source_ids: list[str] | None = None,
+    excluded_seniorities: list[str] | None = None,
 ) -> tuple[JobPosting, MatchResultRow, JobState | None] | None:
     statement = (
         select(JobPosting, MatchResultRow, JobState)
@@ -261,4 +268,8 @@ def get_job_with_profile(
         )
         .where(JobPosting.id == job_id, MatchResultRow.profile_id == profile_id)
     )
+    if source_ids is not None:
+        statement = statement.where(JobPosting.source_id.in_(source_ids))
+    if excluded_seniorities:
+        statement = statement.where(JobPosting.seniority.not_in(excluded_seniorities))
     return session.execute(statement).one_or_none()

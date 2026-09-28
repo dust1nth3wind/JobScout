@@ -49,6 +49,9 @@ class Scanner:
             profiles = [profile for profile in profiles if profile.id == profile_id]
             if not profiles:
                 raise ValueError(f"Profile not found: {profile_id}")
+            sources = [source for source in sources if not source.profile_ids or profile_id in source.profile_ids]
+            if source_id and not sources:
+                raise ValueError(f"Source {source_id} is not enabled for profile {profile_id}")
 
         with self.session_factory() as session:
             run = ScanRun(sources_total=len(sources))
@@ -83,6 +86,8 @@ class Scanner:
                             row, _created = upsert_job(session, job)
                             seen_ids.add(job.external_id)
                             for profile in profiles:
+                                if source.profile_ids and profile.id not in source.profile_ids:
+                                    continue
                                 result = self.matcher.evaluate(job, profile)
                                 save_match_result(session, row.id, profile, result)
                         mark_missing_jobs_inactive(session, source.id, seen_ids)
