@@ -16,6 +16,19 @@ EUROPE = {
     "SE", "CH", "UA", "GB", "VA",
 }
 
+SPONSORSHIP_UNAVAILABLE_TERMS = (
+    "no visa sponsorship", "visa sponsorship is not available", "visa sponsorship unavailable",
+    "cannot sponsor", "unable to sponsor", "do not sponsor", "does not sponsor",
+)
+SPONSORSHIP_AVAILABLE_TERMS = (
+    "visa sponsorship available", "visa sponsorship is available", "we sponsor visas",
+    "visa and relocation support", "work permit sponsorship available",
+)
+EXISTING_WORK_AUTHORIZATION_TERMS = (
+    "existing right to work", "already have the right to work",
+    "must have the right to work", "right to work is required",
+)
+
 
 def _contains(haystack: str, needle: str) -> bool:
     normalized_needle = normalized_text(needle)
@@ -56,6 +69,13 @@ class Matcher:
         location_text = normalized_text(" ".join(job.locations))
         exclusions: list[str] = []
         reasons: list[str] = []
+
+        if any(_contains(haystack, term) for term in SPONSORSHIP_UNAVAILABLE_TERMS):
+            reasons.append("visa sponsorship appears unavailable")
+        elif any(_contains(haystack, term) for term in SPONSORSHIP_AVAILABLE_TERMS):
+            reasons.append("visa sponsorship appears available")
+        if any(_contains(haystack, term) for term in EXISTING_WORK_AUTHORIZATION_TERMS):
+            reasons.append("existing work authorization required")
 
         excluded_terms = [term for term in profile.excluded_terms if _contains(haystack, term)]
         if excluded_terms:

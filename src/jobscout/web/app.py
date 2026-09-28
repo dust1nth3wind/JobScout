@@ -44,6 +44,12 @@ def create_app(config: LoadedConfig | str | Path | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="Profile not found")
         return profile
 
+    def sources_for_profile(profile_id: str):
+        return [
+            source for source in loaded.settings.sources
+            if source.enabled and (not source.profile_ids or profile_id in source.profile_ids)
+        ]
+
     @app.get("/", response_class=HTMLResponse)
     def index(
         request: Request,
@@ -52,17 +58,25 @@ def create_app(config: LoadedConfig | str | Path | None = None) -> FastAPI:
         source: str | None = Query(default=None),
     ) -> HTMLResponse:
         selected_profile = profile_or_404(profile)
+        visible_sources = sources_for_profile(selected_profile.id)
         if status and status not in {item.value for item in JobStatus}:
             raise HTTPException(status_code=400, detail="Invalid status")
         with sessions() as session:
-            rows = list_jobs(session, selected_profile.id, status=status, source_id=source)
+            rows = list_jobs(
+                session,
+                selected_profile.id,
+                status=status,
+                source_id=source,
+                source_ids=[item.id for item in visible_sources],
+                excluded_seniorities=selected_profile.excluded_seniorities,
+            )
         return templates.TemplateResponse(
             request=request,
             name="index.html",
             context={
                 "profiles": loaded.settings.profiles,
                 "selected_profile": selected_profile,
-                "sources": loaded.settings.sources,
+                "sources": visible_sources,
                 "selected_source": source or "",
                 "selected_status": status or "",
                 "statuses": list(JobStatus),
@@ -74,7 +88,13 @@ def create_app(config: LoadedConfig | str | Path | None = None) -> FastAPI:
     def detail(request: Request, job_id: int, profile: str | None = Query(default=None)) -> HTMLResponse:
         selected_profile = profile_or_404(profile)
         with sessions() as session:
-            row = get_job_with_profile(session, job_id, selected_profile.id)
+            row = get_job_with_profile(
+                session,
+                job_id,
+                selected_profile.id,
+                source_ids=[item.id for item in sources_for_profile(selected_profile.id)],
+                excluded_seniorities=selected_profile.excluded_seniorities,
+            )
         if row is None:
             raise HTTPException(status_code=404, detail="Job not found")
         return templates.TemplateResponse(

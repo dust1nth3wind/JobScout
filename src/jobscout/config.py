@@ -37,6 +37,7 @@ class SourceBase(BaseModel):
     id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9_-]*$")
     company: str = Field(min_length=1)
     enabled: bool = True
+    profile_ids: list[str] = Field(default_factory=list)
 
 
 class GreenhouseSource(SourceBase):
@@ -55,6 +56,42 @@ class AshbySource(SourceBase):
     provider: Literal[Provider.ASHBY]
     board_name: str = Field(min_length=1)
     include_compensation: bool = True
+
+
+class RecruiteeSource(SourceBase):
+    provider: Literal[Provider.RECRUITEE]
+    account: str = Field(min_length=1)
+
+
+class SmartRecruitersSource(SourceBase):
+    provider: Literal[Provider.SMARTRECRUITERS]
+    company_identifier: str = Field(min_length=1, pattern=r"^[A-Za-z0-9_-]+$")
+
+
+class JobBoardSource(SourceBase):
+    provider: Literal[Provider.JOB_BOARD]
+    listing_urls: list[str] = Field(min_length=1)
+    job_url_prefixes: list[str] = Field(min_length=1)
+    url_term_groups: list[list[str]] = Field(default_factory=list)
+    excluded_url_terms: list[str] = Field(default_factory=list)
+    excluded_seniorities: list[str] = Field(default_factory=list)
+    page_format: Literal["schema_org", "eurojobsites"] = "schema_org"
+    max_jobs: PositiveInt = Field(default=200, le=500)
+    default_locations: list[str] = Field(default_factory=list)
+    default_countries: list[str] = Field(default_factory=list)
+
+    @field_validator("listing_urls", "job_url_prefixes")
+    @classmethod
+    def absolute_http_urls(cls, values: list[str]) -> list[str]:
+        for value in values:
+            if not value.startswith(("http://", "https://")):
+                raise ValueError("job board URLs must be absolute HTTP(S) URLs")
+        return values
+
+    @field_validator("default_countries")
+    @classmethod
+    def uppercase_countries(cls, values: list[str]) -> list[str]:
+        return sorted({value.upper() for value in values if value})
 
 
 class WebsiteSource(SourceBase):
@@ -78,7 +115,8 @@ class WebsiteSource(SourceBase):
 
 
 SourceConfig = Annotated[
-    GreenhouseSource | LeverSource | AshbySource | WebsiteSource,
+    GreenhouseSource | LeverSource | AshbySource | RecruiteeSource | SmartRecruitersSource
+    | JobBoardSource | WebsiteSource,
     Field(discriminator="provider"),
 ]
 
@@ -164,6 +202,11 @@ class JobScoutConfig(BaseModel):
             ids = [item.id for item in items]
             if len(ids) != len(set(ids)):
                 raise ValueError(f"duplicate {label} id")
+        profile_ids = {profile.id for profile in self.profiles}
+        for source in self.sources:
+            unknown = set(source.profile_ids) - profile_ids
+            if unknown:
+                raise ValueError(f"source {source.id} references unknown profiles: {', '.join(sorted(unknown))}")
         return self
 
 

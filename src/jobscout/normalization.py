@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import html
 import re
 import unicodedata
 from html.parser import HTMLParser
@@ -34,7 +35,7 @@ def html_to_text(value: str | None) -> str:
     if not value:
         return ""
     parser = _TextExtractor()
-    parser.feed(value)
+    parser.feed(html.unescape(value))
     return re.sub(r"\s+", " ", " ".join(parser.parts)).strip()
 
 
@@ -68,11 +69,17 @@ def infer_language(text: str) -> str:
 def infer_seniority(title: str) -> str:
     value = normalized_text(title)
     ordered = (
-        ("intern", ("intern", "internship", "praktikant", "working student", "werkstudent")),
+        (
+            "intern",
+            (
+                "intern", "internship", "trainee", "traineeship", "praktikant",
+                "praktikum", "working student", "werkstudent",
+            ),
+        ),
         ("executive", ("director", "vice president", "vp", "chief", "head of")),
         ("principal", ("principal", "staff")),
-        ("lead", ("lead", "manager", "teamleiter")),
-        ("senior", ("senior", "sr", "erfahren")),
+        ("lead", ("lead", "teamleiter")),
+        ("senior", ("senior", "sr", "erfahren", "experienced")),
         ("junior", ("junior", "jr", "entry level", "einsteiger")),
     )
     for seniority, markers in ordered:
@@ -100,6 +107,10 @@ COUNTRY_ALIASES = {
     "united states": "US", "united states of america": "US", "usa": "US",
     "toronto": "CA", "ottawa": "CA", "calgary": "CA", "edmonton": "CA",
     "vancouver": "CA", "waterloo": "CA",
+    "brussels": "BE", "zaventem": "BE", "antwerp": "BE",
+    "berlin": "DE", "munich": "DE", "hamburg": "DE", "frankfurt": "DE",
+    "amsterdam": "NL", "rotterdam": "NL", "the hague": "NL",
+    "shanghai": "CN", "beijing": "CN",
 }
 
 

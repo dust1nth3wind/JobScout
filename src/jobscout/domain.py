@@ -14,6 +14,9 @@ class Provider(StrEnum):
     GREENHOUSE = "greenhouse"
     LEVER = "lever"
     ASHBY = "ashby"
+    RECRUITEE = "recruitee"
+    SMARTRECRUITERS = "smartrecruiters"
+    JOB_BOARD = "job_board"
     WEBSITE = "website"
 
 

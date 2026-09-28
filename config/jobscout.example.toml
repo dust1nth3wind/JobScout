@@ -35,6 +35,25 @@ default_locations = ["Berlin, Deutschland"]
 default_countries = ["DE"]
 enabled = false
 
+[[sources]]
+id = "example-smartrecruiters"
+company = "Example SmartRecruiters Company"
+provider = "smartrecruiters"
+company_identifier = "replace-me"
+enabled = false
+
+[[sources]]
+id = "example-job-board"
+company = "Example Job Board"
+provider = "job_board"
+listing_urls = ["https://example.com/sitemap.xml"]
+job_url_prefixes = ["https://example.com/jobs/"]
+url_term_groups = [["policy", "sustainability", "climate"]]
+excluded_url_terms = ["intern", "internship", "trainee", "traineeship"]
+excluded_seniorities = ["intern"]
+max_jobs = 100
+enabled = false
+
 [[profiles]]
 id = "friend-a"
 display_name = "Friend A"
