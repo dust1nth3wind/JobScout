@@ -26,6 +26,12 @@ uv run jobscout serve --config config/harish.local.toml --port 8001
 
 Xinning erreicht ihr unter [http://127.0.0.1:8000](http://127.0.0.1:8000), Harish unter [http://127.0.0.1:8001](http://127.0.0.1:8001). Beide Server laufen nur, solange ihre Terminalprozesse laufen; mit `Ctrl+C` beendet ihr sie. `serve` scannt nicht automatisch. Auch spätere Aktualisierungen der Stellen erfolgen nur durch die beiden Scan-Befehle oben. Kopiert bei Updates die Beispielkonfiguration nicht über eure privaten Dateien.
 
+## Windows: Aktualisierung per Desktop-Icon
+
+Auf dem jeweiligen Windows-Rechner erstellt ein Doppelklick auf `scripts\windows\Setup-Icons.cmd` das persönliche Desktop-Icon für Xinning oder Harish. Das Icon installiert die Pakete, prüft die persönliche Konfiguration, aktualisiert die Stellen und öffnet anschließend das Dashboard. Beide verwenden auf ihren getrennten Rechnern Port 8000. Ein weiterer Doppelklick aktualisiert erneut; das Startfenster muss während der Nutzung geöffnet bleiben.
+
+Die [Windows-Anleitung](docs/windows-launcher.md) beschreibt Einrichtung, Beenden und Fehlerbehebung. Die persönliche private Konfiguration muss bereits im Projektordner liegen.
+
 ## Voraussetzungen
 
 - macOS oder Windows
