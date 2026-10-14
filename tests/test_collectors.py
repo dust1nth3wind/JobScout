@@ -345,6 +345,22 @@ def test_website_collector_falls_back_to_h1_and_configured_location() -> None:
     assert jobs[0].countries == ["DE"]
 
 
+@pytest.mark.parametrize("status", [404, 410])
+def test_website_collector_skips_unavailable_job_page(status: int) -> None:
+    source = WebsiteSource(
+        id="website",
+        company="Example",
+        provider="website",
+        job_urls=["https://example.com/jobs/closed"],
+    )
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda request: httpx.Response(status, request=request))
+    ) as client:
+        jobs = WebsiteCollector(attempts=1).collect(source, client)
+
+    assert jobs == []
+
+
 def test_job_board_collector_discovers_filtered_schema_org_jobs() -> None:
     sitemap = """<?xml version="1.0"?><urlset>
       <url><loc>https://board.example/jobs/climate-policy-officer</loc></url>

@@ -9,6 +9,7 @@ __pycache__/
 
 # Local JobScout data and private configuration
 config/jobscout.toml
+config/*.local.toml
 data/
 *.db
 *.db-shm

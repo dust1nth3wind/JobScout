@@ -317,7 +317,12 @@ class WebsiteCollector:
         results: list[CollectedJob] = []
         for configured_url in source.job_urls:
             url = canonicalize_url(configured_url)
-            html = get_text(client, url, attempts=self.attempts)
+            try:
+                html = get_text(client, url, attempts=self.attempts)
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code in {404, 410}:
+                    continue
+                raise
             job = parse_job_page(
                 source_id=source.id,
                 provider=Provider.WEBSITE,

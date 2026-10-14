@@ -2,26 +2,29 @@
 
 JobScout sammelt öffentliche Stellenanzeigen von Greenhouse, Lever, Ashby, Recruitee und SmartRecruiters, aus öffentlichen Jobboard-Übersichten beziehungsweise XML-Sitemaps sowie von direkt eingetragenen Jobseiten. Anschließend vereinheitlicht die Anwendung die Anzeigen und bewertet sie anhand der Profile in der Konfigurationsdatei. Die Bewertung ist regelbasiert und funktioniert ohne LLM.
 
-## Für Harish und Xinning: Nach einem Update
+## Zwei lokale Setups für Xinning und Harish
 
-Öffnet ein Terminal im Ordner `JobScout` und führt diese Befehle der Reihe nach aus:
+Beide Setups verwenden denselben Code aus `main`, aber eigene private Konfigurationen und Datenbanken. Die Dateien `config/xinning.local.toml`, `config/harish.local.toml` und `data/` werden nicht in Git gespeichert. Die bisherige gemeinsame `config/jobscout.toml` und `data/jobscout.sqlite3` bleiben als lokale Backups erhalten. Für die getrennten Setups deshalb bei jedem Befehl `--config` angeben.
+
+Nach einem Code-Update im Ordner `JobScout`:
 
 ```text
 git pull
 uv sync
-uv run jobscout config check
-uv run jobscout serve
+uv run jobscout config check --config config/xinning.local.toml
+uv run jobscout config check --config config/harish.local.toml
+uv run jobscout scan --config config/xinning.local.toml --profile friend-a
+uv run jobscout scan --config config/harish.local.toml --profile friend-b
 ```
 
-Danach ist das Dashboard unter [http://127.0.0.1:8000](http://127.0.0.1:8000) erreichbar.
-
-Mit `Ctrl+C` beendet ihr den laufenden Server. Wenn ihr nur neue Stellenanzeigen abrufen möchtet, verwendet statt `serve` diesen Befehl:
+Falls der bisherige gemeinsame Server noch Port 8000 belegt, beendet ihn zuerst in seinem Terminal mit `Ctrl+C`. Die Dashboards danach bei Bedarf in zwei getrennten Terminals starten:
 
 ```text
-uv run jobscout scan
+uv run jobscout serve --config config/xinning.local.toml --port 8000
+uv run jobscout serve --config config/harish.local.toml --port 8001
 ```
 
-Wichtig: Kopiert bei einem Update nicht erneut `config/jobscout.example.toml`. Eure persönlichen Einstellungen stehen bereits in `config/jobscout.toml` und bleiben bei `git pull` erhalten. Falls `config check` einen Fehler meldet, vergleicht eure Datei mit `config/jobscout.example.toml` und ergänzt neue Einstellungen.
+Xinning erreicht ihr unter [http://127.0.0.1:8000](http://127.0.0.1:8000), Harish unter [http://127.0.0.1:8001](http://127.0.0.1:8001). Beide Server laufen nur, solange ihre Terminalprozesse laufen; mit `Ctrl+C` beendet ihr sie. `serve` scannt nicht automatisch. Auch spätere Aktualisierungen der Stellen erfolgen nur durch die beiden Scan-Befehle oben. Kopiert bei Updates die Beispielkonfiguration nicht über eure privaten Dateien.
 
 ## Voraussetzungen
 
